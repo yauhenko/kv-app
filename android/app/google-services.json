@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "567122742",
+    "project_id": "net-yabx-kv",
+    "storage_bucket": "net-yabx-kv.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:567122742:android:f42e3169379806067af197",
+        "android_client_info": {
+          "package_name": "net.yabx.kv"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "567122742-s2hradjpp15hnc7png93escfdgjc85j6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBOAgTZnf8OzFxfB9UsiyuiYOvsbJzTHus"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "567122742-s2hradjpp15hnc7png93escfdgjc85j6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
