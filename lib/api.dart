@@ -54,7 +54,7 @@ class Api {
       params['passwd'] = _passwd;
     }
 
-    //print(params);
+    print(params);
 
     String body = json.encode(params);
     http.Response response = await http.post(url, headers: headers, body: body);

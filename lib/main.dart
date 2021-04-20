@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
-import 'package:kv/classes.dart';
+import 'package:kv/state.dart';
+import 'package:provider/provider.dart';
 
 import 'api.dart';
 import 'auth.dart';
@@ -11,88 +12,74 @@ import 'storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(App());
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => AppState()),
+    ],
+    child: App(),
+  ));
 }
 
-class App extends StatefulWidget {
-  _AppState createState() => _AppState();
-}
+bool isInit = false;
 
-class _AppState extends State<App> {
-  bool ready = false;
-  String login = '';
-  String passwd = '';
-  String fcmToken = '';
-  User? user;
+class App extends StatelessWidget {
 
-  @override
-  void initState() {
-    super.initState();
-    this.init();
-  }
+  // exit() {
+  //   api.logout();
+  //   storage.deleteAll();
+  //   setState(() {
+  //     user = null;
+  //     login = '';
+  //     passwd = '';
+  //   });
+  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //     content: Text('Сессия закрыта'),
+  //   ));
+  // }
 
-  exit() {
-    api.logout();
-    storage.deleteAll();
-    setState(() {
-      user = null;
-      login = '';
-      passwd = '';
-    });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Сессия закрыта'),
-    ));
-  }
+  init(BuildContext context) async {
+    if(isInit) return;
+    isInit = true;
+    print('init');
 
-  init() async {
+    AppState state =  context.read<AppState>();
 
     Firebase.initializeApp().then((app) {
       FirebaseMessaging messaging = FirebaseMessaging.instance;
       messaging.getToken().then((token) {
-        fcmToken = token ?? '';
+        state.fcmToken = token ?? '';
         print('fcm: $token');
       });
     });
 
-    login = await storage.read(key: 'login') ?? '';
-    passwd = await storage.read(key: 'passwd') ?? '';
-
-    print('login: ' + login);
-    print('passwd: ' + passwd);
+    state.login = await storage.read(key: 'login') ?? '';
+    state.passwd = await storage.read(key: 'passwd') ?? '';
 
     try {
-      User user = await api.auth(login, passwd);
-      setState(() {
-        this.user = user;
-      });
+      state.user = await api.auth(state.login, state.passwd);
     } catch (_) {
-      api.logout();
-      storage.delete(key: 'login');
-      storage.delete(key: 'passwd');
+     state.logout();
     } finally {
-      setState(() {
-        ready = true;
-      });
+     state.ready  = true;
     }
-  }
 
-  void setUser(User? user) {
-    setState(() {
-      this.user = user;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    this.init(context);
+
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+    AppState state = context.watch<AppState>();
+
     return MaterialApp(
       title: 'Квартирант',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ready
-          ? (user == null ? AuthScreen(setUser) : SecondScreen(user!, exit))
-          : Text('Loading...'),
+      home: state.ready ? (state.user == null ? AuthScreen() : SecondScreen()) : Text('Loading...'),
+      // home: Text('Loading...'),
     );
   }
 }

@@ -1,59 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:kv/api.dart';
 import 'package:kv/classes.dart';
+import 'package:kv/state.dart';
 import 'package:kv/storage.dart';
+import 'package:provider/provider.dart';
 
-// ignore: must_be_immutable
-class AuthScreen extends StatefulWidget {
-  Function setUser;
-
-  AuthScreen(this.setUser);
-
+class AuthScreen extends StatelessWidget {
   @override
-  _AuthScreenState createState() => _AuthScreenState(this);
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => _AuthState(),
+      child: AuthForm(),
+    );
+  }
 }
 
-class _AuthScreenState extends State<AuthScreen> {
-  AuthScreen screen;
+class AuthForm extends StatelessWidget {
+  Future doLogin(BuildContext context) async {
+    _AuthState state = context.read<_AuthState>();
 
-  _AuthScreenState(this.screen);
-
-  String login = '';
-  String passwd = '';
-  bool loading = false;
-
-  Future doLogin() async {
     try {
-      setState(() {
-        loading = true;
-      });
+      state.loading = true;
 
-      User user = await api.auth(login, passwd);
+      User user = await api.auth(state.login, state.passwd);
+      context.read<AppState>().user = user;
 
-      print(user);
-
-      await storage.write(key: 'login', value: login);
-      await storage.write(key: 'passwd', value: passwd);
+      await storage.write(key: 'login', value: state.login);
+      await storage.write(key: 'passwd', value: state.passwd);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Добро пожаловать, ' + user.name + '!'),
         backgroundColor: Colors.green,
       ));
-
-      this.screen.setUser(user);
     } on ApiException catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(error.message),
         backgroundColor: Colors.red,
       ));
     } finally {
-      setState(() {
-        loading = false;
-      });
+      state.loading = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    _AuthState state = context.watch<_AuthState>();
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Войдите в свой аккаунт'),
@@ -61,49 +52,45 @@ class _AuthScreenState extends State<AuthScreen> {
       body: Padding(
           padding: EdgeInsets.all(16),
           child: AbsorbPointer(
-            absorbing: loading,
+            absorbing: state.loading,
             child: Form(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text('Логин'),
                   TextFormField(
-                    readOnly: loading,
+                    readOnly: state.loading,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
                       hintText: 'irina',
                     ),
-                    onChanged: (text) => {
-                      setState(() {
-                        login = text;
-                      })
+                    onChanged: (text) {
+                      state.login = text;
                     },
                   ),
                   Padding(
                     padding: EdgeInsets.only(top: 20),
-                    child: Text('Пароль $passwd'),
+                    child: Text('Пароль ${state.passwd}'),
                   ),
                   TextFormField(
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
                       hintText: '******',
                     ),
-                    readOnly: loading,
+                    readOnly: state.loading,
                     obscureText: true,
                     enableSuggestions: false,
                     autocorrect: false,
-                    onChanged: (text) => {
-                      setState(() {
-                        passwd = text;
-                      })
+                    onChanged: (text) {
+                      state.passwd = text;
                     },
                   ),
                   Padding(
                     child: ElevatedButton(
-                      onPressed: loading
+                      onPressed: state.loading
                           ? null
                           : () {
-                              doLogin();
+                              doLogin(context);
                             },
                       child: Text('Войти'),
                     ),
@@ -117,27 +104,57 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 }
 
-// ignore: must_be_immutable
 class SecondScreen extends StatelessWidget {
-  User user;
-  Function exit;
-
-  SecondScreen(this.user, this.exit);
-
   @override
   Widget build(BuildContext context) {
+    AppState state = context.watch<AppState>();
+    User user = state.user!;
+    Flat? flat = user.flat;
     return Scaffold(
       appBar: AppBar(
-        title: Text(user.name),
+        title: Text(state.user?.name ?? ''),
       ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            this.exit();
-          },
-          child: Text('Logout'),
+        child: Column(
+          children: [
+            Text('Баланс: \$ ${user.balance.toString()}'),
+            Text(flat != null ? '${flat.address} (\$ ${flat.price} в мес.)' : ''),
+            ElevatedButton(
+              onPressed: () {
+                context.read<AppState>().logout();
+              },
+              child: Text('Logout'),
+            ),
+          ],
         ),
       ),
     );
+  }
+}
+
+class _AuthState with ChangeNotifier {
+  String _login = '';
+  String _passwd = '';
+  bool _loading = false;
+
+  String get login => _login;
+
+  set login(String value) {
+    _login = value;
+    notifyListeners();
+  }
+
+  String get passwd => _passwd;
+
+  set passwd(String value) {
+    _passwd = value;
+    notifyListeners();
+  }
+
+  bool get loading => _loading;
+
+  set loading(bool value) {
+    _loading = value;
+    notifyListeners();
   }
 }
