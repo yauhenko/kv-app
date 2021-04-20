@@ -1,5 +1,5 @@
-import 'package:kv/classes.dart';
-import 'api.dart';
+import 'utils/api.dart';
+import 'classes/user.dart';
 
 void main() async {
   try {

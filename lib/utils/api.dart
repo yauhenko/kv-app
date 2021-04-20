@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:kv/classes.dart';
+
+import '../classes/counter.dart';
+import '../classes/transaction.dart';
+import '../classes/user.dart';
 
 class Api {
   String _login = '';

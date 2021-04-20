@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:kv/api.dart';
-import 'package:kv/classes.dart';
-import 'package:kv/state.dart';
-import 'package:kv/storage.dart';
 import 'package:provider/provider.dart';
+import '../utils/api.dart';
+import '../state.dart';
+import '../utils/storage.dart';
+import '../classes/user.dart';
 
 class AuthScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => _AuthState(),
-      child: AuthForm(),
+      child: _AuthForm(),
     );
   }
 }
 
-class AuthForm extends StatelessWidget {
+class _AuthForm extends StatelessWidget {
   Future doLogin(BuildContext context) async {
     _AuthState state = context.read<_AuthState>();
 
@@ -25,12 +25,13 @@ class AuthForm extends StatelessWidget {
       User user = await api.auth(state.login, state.passwd);
       context.read<AppState>().user = user;
 
-      await storage.write(key: 'login', value: state.login);
-      await storage.write(key: 'passwd', value: state.passwd);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Добро пожаловать, ' + user.name + '!'),
         backgroundColor: Colors.green,
       ));
+
+      await storage.write(key: 'login', value: state.login);
+      await storage.write(key: 'passwd', value: state.passwd);
     } on ApiException catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(error.message),
@@ -100,34 +101,6 @@ class AuthForm extends StatelessWidget {
               ),
             ),
           )),
-    );
-  }
-}
-
-class SecondScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    AppState state = context.watch<AppState>();
-    User user = state.user!;
-    Flat? flat = user.flat;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(state.user?.name ?? ''),
-      ),
-      body: Center(
-        child: Column(
-          children: [
-            Text('Баланс: \$ ${user.balance.toString()}'),
-            Text(flat != null ? '${flat.address} (\$ ${flat.price} в мес.)' : ''),
-            ElevatedButton(
-              onPressed: () {
-                context.read<AppState>().logout();
-              },
-              child: Text('Logout'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

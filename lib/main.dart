@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
+import 'package:kv/screens/home.dart';
+import 'package:kv/screens/submit.dart';
 import 'package:kv/state.dart';
 import 'package:provider/provider.dart';
 
-import 'api.dart';
-import 'auth.dart';
-import 'storage.dart';
+import 'utils/api.dart';
+import 'screens/auth.dart';
+import 'utils/storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,26 +25,13 @@ void main() async {
 bool isInit = false;
 
 class App extends StatelessWidget {
-
-  // exit() {
-  //   api.logout();
-  //   storage.deleteAll();
-  //   setState(() {
-  //     user = null;
-  //     login = '';
-  //     passwd = '';
-  //   });
-  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-  //     content: Text('Сессия закрыта'),
-  //   ));
-  // }
-
   init(BuildContext context) async {
-    if(isInit) return;
+    // return;
+    if (isInit) return;
     isInit = true;
     print('init');
 
-    AppState state =  context.read<AppState>();
+    AppState state = context.read<AppState>();
 
     Firebase.initializeApp().then((app) {
       FirebaseMessaging messaging = FirebaseMessaging.instance;
@@ -58,19 +47,16 @@ class App extends StatelessWidget {
     try {
       state.user = await api.auth(state.login, state.passwd);
     } catch (_) {
-     state.logout();
+      state.logout();
     } finally {
-     state.ready  = true;
+      state.ready = true;
     }
-
   }
 
   @override
   Widget build(BuildContext context) {
     this.init(context);
-
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
     AppState state = context.watch<AppState>();
 
     return MaterialApp(
@@ -78,8 +64,37 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: state.ready ? (state.user == null ? AuthScreen() : SecondScreen()) : Text('Loading...'),
-      // home: Text('Loading...'),
+      home: state.ready ? (state.user == null ? AuthScreen() : HomeScreen()) : SplashScreen(),
+      routes: {
+        '/submit': (BuildContext context) => SubmitScreen(),
+      },
+    );
+  }
+}
+
+class SplashScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        //crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 150, left: 50, right: 50, bottom: 50),
+            child: Image.asset(
+              'assets/images/icon.png',
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 50),
+            child: Text(
+              'Загрузка...',
+              style: TextStyle(fontSize: 30, color: Colors.black54),
+            ),
+          ),
+          CircularProgressIndicator(),
+        ],
+      ),
     );
   }
 }

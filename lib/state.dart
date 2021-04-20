@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'storage.dart';
-
-import 'api.dart';
-import 'classes.dart';
+import 'classes/user.dart';
+import 'utils/storage.dart';
+import 'utils/api.dart';
 
 class AppState with ChangeNotifier {
   bool _ready = false;
