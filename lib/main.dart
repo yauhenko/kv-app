@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/services.dart';
-import 'package:kv/screens/home.dart';
-import 'package:kv/screens/submit.dart';
-import 'package:kv/state.dart';
 import 'package:provider/provider.dart';
 
-import 'utils/api.dart';
 import 'screens/auth.dart';
+import 'screens/home.dart';
+import 'screens/submit.dart';
+
+import 'state.dart';
+import 'utils/api.dart';
 import 'utils/storage.dart';
 
 void main() async {
@@ -56,7 +56,6 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     this.init(context);
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     AppState state = context.watch<AppState>();
 
     return MaterialApp(

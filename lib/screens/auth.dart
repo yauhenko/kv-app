@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vibration/vibration.dart';
 import '../utils/api.dart';
 import '../state.dart';
 import '../utils/storage.dart';
@@ -30,9 +31,10 @@ class _AuthForm extends StatelessWidget {
         backgroundColor: Colors.green,
       ));
 
-      await storage.write(key: 'login', value: state.login);
-      await storage.write(key: 'passwd', value: state.passwd);
+      storage.write(key: 'login', value: state.login);
+      storage.write(key: 'passwd', value: state.passwd);
     } on ApiException catch (error) {
+      Vibration.vibrate(pattern: [0, 20, 100, 20]);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(error.message),
         backgroundColor: Colors.red,
@@ -58,6 +60,14 @@ class _AuthForm extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Center(
+                        child: Image.asset(
+                      'assets/images/icon.png',
+                      height: 100,
+                    )),
+                  ),
                   Text('Логин'),
                   TextFormField(
                     readOnly: state.loading,
@@ -86,16 +96,22 @@ class _AuthForm extends StatelessWidget {
                       state.passwd = text;
                     },
                   ),
-                  Padding(
-                    child: ElevatedButton(
-                      onPressed: state.loading
-                          ? null
-                          : () {
-                              doLogin(context);
-                            },
-                      child: Text('Войти'),
+                  Center(
+                    child: Padding(
+                      child: ElevatedButton(
+                        style: ButtonStyle(),
+                        onPressed: state.loading
+                            ? null
+                            : () {
+                                doLogin(context);
+                              },
+                        child: Text(
+                          'Войти',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                      ),
+                      padding: EdgeInsets.only(top: 20),
                     ),
-                    padding: EdgeInsets.only(top: 20),
                   )
                 ],
               ),
